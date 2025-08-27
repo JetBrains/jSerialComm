@@ -20,7 +20,6 @@ PRINT           = @echo
 
 # Locate the Java JDK and the Visual Studio 2022 installation
 JDK_HOME        = $(strip $(JDK_HOME))
-VS_HOME         = "$(VS2022INSTALLDIR)\VC\Auxiliary\Build\vcvarsall.bat"
 
 # Java and resource definitions
 LIBRARY_NAME    = jSerialComm.dll
@@ -31,7 +30,7 @@ FULL_CLASS      = com.fazecast.jSerialComm.SerialPort
 JAVA_CLASS_DIR  = $(BUILD_DIR)\com\fazecast\jSerialComm
 JNI_HEADER_FILE = com_fazecast_jSerialComm_SerialPort.h
 JNI_HEADER      = ..\$(JNI_HEADER_FILE)
-ANDROID_JAR     = ..\..\..\external/android.jar
+ANDROID_JAR     = ..\..\..\external\android.jar
 JAVA_CLASS      = $(JAVA_CLASS_DIR)\SerialPort.class
 JFLAGS          =  --release 6 -Xlint:-options
 JAVAC           = "$(JDK_HOME)\bin\javac"
@@ -53,15 +52,19 @@ all : win32 win64 winarm winarm64
 
 # Build architecture-specific Windows libraries
 win32 : $(BUILD_DIR)\x86 $(BUILD_DIR)\x86\$(LIBRARY_NAME)
+    $(MKDIR) $(RESOURCE_DIR)\x86
 	$(COPY) $(BUILD_DIR)\x86\*.dll $(RESOURCE_DIR)\x86
 	$(RMDIR) $(BUILD_DIR)
 win64 : $(BUILD_DIR)\x86_64 $(BUILD_DIR)\x86_64\$(LIBRARY_NAME)
+    $(MKDIR) $(RESOURCE_DIR)\x86_64
 	$(COPY) $(BUILD_DIR)\x86_64\*.dll $(RESOURCE_DIR)\x86_64
 	$(RMDIR) $(BUILD_DIR)
 winarm : $(BUILD_DIR)\armv7 $(BUILD_DIR)\armv7\$(LIBRARY_NAME)
+    $(MKDIR) $(RESOURCE_DIR)\armv7
 	$(COPY) $(BUILD_DIR)\armv7\*.dll $(RESOURCE_DIR)\armv7
 	$(RMDIR) $(BUILD_DIR)
 winarm64 : $(BUILD_DIR)\aarch64 $(BUILD_DIR)\aarch64\$(LIBRARY_NAME)
+    $(MKDIR) $(RESOURCE_DIR)\aarch64
 	$(COPY) $(BUILD_DIR)\aarch64\*.dll $(RESOURCE_DIR)\aarch64
 	$(RMDIR) $(BUILD_DIR)
 	
@@ -77,23 +80,23 @@ $(BUILD_DIR)\aarch64 :
 
 # Build rules for all libraries
 $(BUILD_DIR)\x86\$(LIBRARY_NAME) : $(JNI_HEADER) $(OBJECTSx86)
-	$(VS_HOME) x86 & $(LINK) $(LDFLAGS) /MACHINE:X86 /OUT:$@ $(OBJECTSx86) $(LIBRARIES)
+	$(LINK) $(LDFLAGS) /MACHINE:X86 /OUT:$@ $(OBJECTSx86) $(LIBRARIES)
 $(BUILD_DIR)\x86_64\$(LIBRARY_NAME) : $(JNI_HEADER) $(OBJECTSx86_64)
-	$(VS_HOME) x64 & $(LINK) $(LDFLAGS) /MACHINE:X64 /OUT:$@ $(OBJECTSx86_64) $(LIBRARIES)
+	$(LINK) $(LDFLAGS) /MACHINE:X64 /OUT:$@ $(OBJECTSx86_64) $(LIBRARIES)
 $(BUILD_DIR)\armv7\$(LIBRARY_NAME) : $(JNI_HEADER) $(OBJECTSarmv7)
-	$(VS_HOME) x86_arm & $(LINK) $(LDFLAGS) /MACHINE:ARM /OUT:$@ $(OBJECTSarmv7) $(LIBRARIES)
+	$(LINK) $(LDFLAGS) /MACHINE:ARM /OUT:$@ $(OBJECTSarmv7) $(LIBRARIES)
 $(BUILD_DIR)\aarch64\$(LIBRARY_NAME) : $(JNI_HEADER) $(OBJECTSaarch64)
-	$(VS_HOME) x64_arm64 & $(LINK) $(LDFLAGS) /MACHINE:ARM64 /OUT:$@ $(OBJECTSaarch64) $(LIBRARIES)
+	$(LINK) $(LDFLAGS) /MACHINE:ARM64 /OUT:$@ $(OBJECTSaarch64) $(LIBRARIES)
 
 # Suffix rules to get from *.c -> *.obj
 $(OBJECTSx86) :
-	$(VS_HOME) x86 & $(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
+	$(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
 $(OBJECTSx86_64) :
-	$(VS_HOME) x64 & $(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
+	$(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
 $(OBJECTSarmv7) :
-	$(VS_HOME) x86_arm & $(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
+	$(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
 $(OBJECTSaarch64) :
-	$(VS_HOME) x64_arm64 & $(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
+	$(COMPILE) $(CFLAGS) $(INCLUDES) $(*B).c -Fo$@
 
 # Rule to build JNI header file
 $(JNI_HEADER) : $(JAVA_CLASS)
@@ -101,6 +104,6 @@ $(JNI_HEADER) : $(JAVA_CLASS)
 
 # Suffix rule to get from *.java -> *.class
 $(JAVA_CLASS) :
-	$(JAVAC) $(JFLAGS) -d $(JAVA_CLASS_DIR)\..\..\.. -cp $(JAVA_SOURCE_DIR)\..\..\..:$(ANDROID_JAR) $(JAVA_SOURCE_DIR)\$(*B).java -h ..
+	$(JAVAC) $(JFLAGS) -d $(JAVA_CLASS_DIR)\..\..\.. -cp $(JAVA_SOURCE_DIR)\..\..\..;$(ANDROID_JAR) $(JAVA_SOURCE_DIR)\$(*B).java -h ..
 
 !ENDIF
