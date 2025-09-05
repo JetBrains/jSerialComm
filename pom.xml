@@ -58,7 +58,7 @@
           <execution>
             <id>default-compile</id>
             <configuration>
-              <release>6</release>
+              <release>21</release>
               <debug>false</debug>
               <excludes>
                 <exclude>module-info.java</exclude>
@@ -111,7 +111,7 @@
           <linksource>${include.source}</linksource>
           <show>protected</show>
           <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-          <source>8</source>
+          <source>21</source>
         </configuration>
       </plugin>
 
@@ -134,7 +134,7 @@
               <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
               <Implementation-Version>${project.version}</Implementation-Version>
               <Private-Package>FreeBSD.arm64,FreeBSD.x86,FreeBSD.x86_64,Linux.armv5,Linux.armv6hf,Linux.armv7hf,Linux.armv8_32,Linux.armv8_64,Linux.ppc64le,Linux.x86,Linux.x86_64,OSX.aarch64,OSX.x86,OSX.x86_64,OpenBSD.amd64,OpenBSD.x86,Solaris.sparcv8plus_32,Solaris.sparcv9_64,Solaris.x86,Solaris.x86_64,Windows.aarch64,Windows.armv7,Windows.x86,Windows.x86_64</Private-Package>
-              <Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.6))"</Require-Capability>
+              <Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=21))"</Require-Capability>
               <Sealed>true</Sealed>
             </manifestEntries>
           </archive>
