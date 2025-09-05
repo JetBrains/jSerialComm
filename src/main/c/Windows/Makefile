@@ -31,7 +31,7 @@ JNI_HEADER_FILE     := com_fazecast_jSerialComm_SerialPort.h
 JNI_HEADER          := ../$(JNI_HEADER_FILE)
 ANDROID_JAR         := ../../../external/android.jar
 JAVA_CLASS          := $(JAVA_CLASS_DIR)/SerialPort.class
-JFLAGS              := --release 6 -Xlint:-options
+JFLAGS              := --release 21 -Xlint:-options
 JAVAC               := "$(JDK_HOME)/bin/javac"
 
 # Architecture-dependent library variables

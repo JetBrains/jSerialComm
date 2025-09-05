@@ -20,9 +20,6 @@ archivesBaseName = 'jSerialComm'
 version = System.getenv("LIB_VERSION") ?: '2.11.2'
 ext.moduleName = 'com.fazecast.jSerialComm'
 
-sourceCompatibility = 6
-targetCompatibility = 6
-
 javadoc {
   title archivesBaseName + ' ' + version + ' API'
   options {
@@ -44,8 +41,8 @@ sourceSets {
 }
 
 compileModuleInfoJava {
-  sourceCompatibility = 9
-  targetCompatibility = 9
+  sourceCompatibility = 21
+  targetCompatibility = 21
   inputs.property("moduleName", moduleName)
 
   doFirst {
