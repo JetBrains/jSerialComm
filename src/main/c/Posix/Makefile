@@ -47,7 +47,7 @@ FULL_CLASS                  := com.fazecast.jSerialComm.SerialPort
 JAVA_CLASS_DIR              := $(BUILD_DIR)/com/fazecast/jSerialComm
 JNI_HEADER                  := ../com_fazecast_jSerialComm_SerialPort.h
 JAVA_CLASS                  := $(JAVA_CLASS_DIR)/SerialPort.class
-JFLAGS                      := --release 6 -Xlint:-options
+JFLAGS                      := --release 21 -Xlint:-options
 JAVAC                       := "$(JDK_HOME)/bin/javac"
 
 # Architecture-dependent library variables
