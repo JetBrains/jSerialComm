@@ -183,9 +183,9 @@ public class SerialPort
 				if (!manualLibraryPath.isEmpty())
 				{
 					for (int i = 0; !libraryLoaded && (i < architectures.length); ++i)
-						libraryLoaded = loadNativeLibrary(new File(manualLibraryPath, libraryPath + File.separator + architectures[i] + File.separator + libraryFileName).getCanonicalPath(), errorMessages);
+						libraryLoaded = loadNativeLibrary(new File(manualLibraryPath, libraryPath + File.separator + architectures[i] + File.separator + libraryFileName).getCanonicalPath(), createResourceURI(libraryPath, architectures[i], libraryFileName), errorMessages);
 					if (!libraryLoaded)
-						libraryLoaded = loadNativeLibrary(new File(manualLibraryPath, libraryFileName).getCanonicalPath(), errorMessages);
+						libraryLoaded = loadNativeLibrary(new File(manualLibraryPath, libraryFileName).getCanonicalPath(), null, errorMessages);
 				}
 
 				// Attempt to load from the system-defined library location
@@ -206,7 +206,7 @@ public class SerialPort
 				// Attempt to load from the unpacked native library location
 				if (!libraryLoaded && unpackedBinPath != null) {
 					for (int i = 0; !libraryLoaded && (i < architectures.length); ++i) {
-						libraryLoaded = loadNativeLibrary(new File(unpackedBinPath, libraryPath + File.separator + architectures[i] + File.separator + libraryFileName).getCanonicalPath(), errorMessages);
+						libraryLoaded = loadNativeLibrary(new File(unpackedBinPath, libraryPath + File.separator + architectures[i] + File.separator + libraryFileName).getCanonicalPath(), createResourceURI(libraryPath, architectures[i], libraryFileName), errorMessages);
 					}
 					if (!libraryLoaded && new File(unpackedBinPath).exists()) {
 						throw new UnsatisfiedLinkError("Unpacked native bin directory is found, but cannot load the library from it! " + errorMessages);
@@ -220,7 +220,7 @@ public class SerialPort
 				for (int attempt = 0; !libraryLoaded && (attempt < 2); ++attempt)
 				{
 					File nativeLibrary = new File((attempt == 0) ? tempFileDirectory : userHomeDirectory, libraryFileName);
-					libraryLoaded = nativeLibrary.exists() && loadNativeLibrary(nativeLibrary.getCanonicalPath(), errorMessages);
+					libraryLoaded = nativeLibrary.exists() && loadNativeLibrary(nativeLibrary.getCanonicalPath(), null, errorMessages);
 				}
 
 				// Attempt to load from the expected JAR location
@@ -242,7 +242,8 @@ public class SerialPort
 					// Attempt to load the native jSerialComm library for any available architecture
 					for (int i = 0; !libraryLoaded && (i < architectures.length); ++i)
 					{
-						InputStream fileContents = SerialPort.class.getResourceAsStream("/" + libraryPath + "/" + architectures[i] + "/" + libraryFileName);
+						final String resourceURI = createResourceURI(libraryPath, architectures[i], libraryFileName);
+						InputStream fileContents = SerialPort.class.getResourceAsStream(resourceURI);
 						if (fileContents != null)
 							try
 							{
@@ -261,7 +262,7 @@ public class SerialPort
 
 								// Attempt to load the native library
 								errorMessages.add("Loading for arch: " + architectures[i]);
-								libraryLoaded = loadNativeLibrary(tempNativeLibrary.getCanonicalPath(), errorMessages);
+								libraryLoaded = loadNativeLibrary(tempNativeLibrary.getCanonicalPath(), resourceURI, errorMessages);
 								if (libraryLoaded)
 									errorMessages.add("Successfully loaded!");
 							}
@@ -404,12 +405,19 @@ public class SerialPort
 		path.delete();
 	}
 
+	static private String createResourceURI(String path, String architecture, String file) {
+		if (path == null || architecture == null || file == null) return null;
+		return "/" + path + "/" + architecture + "/" + file;
+	}
+
 	// Static native library loading function
-	static private boolean loadNativeLibrary(String absoluteLibraryPath, Vector<String> errorMessages)
+	static private boolean loadNativeLibrary(String absoluteLibraryPath, String resourceURI, Vector<String> errorMessages)
 	{
 		try
 		{
-			if (!digestMatches(absoluteLibraryPath)) return false;
+			if (resourceURI != null) {
+				if (!digestMatches(absoluteLibraryPath, resourceURI)) return false;
+			}
 			System.load(absoluteLibraryPath);
 			if (!getNativeLibraryVersion().equals(versionString))
 			{
@@ -424,7 +432,7 @@ public class SerialPort
 		catch (Exception e) { errorMessages.add(e.getMessage()); return false; }
 	}
 
-	private static boolean digestMatches(String absoluteLibraryPath) throws NoSuchAlgorithmException, FileNotFoundException {
+	private static boolean digestMatches(String absoluteLibraryPath, String resourceURI) throws NoSuchAlgorithmException, FileNotFoundException {
 		Path path = Path.of(absoluteLibraryPath);
 
 		// OS/arch/file
@@ -433,7 +441,7 @@ public class SerialPort
 				.map(Path::toString)
 				.collect(Collectors.joining("/"));
 
-		final InputStream libraryStream = SerialPort.class.getResourceAsStream("/" + resource);
+		final InputStream libraryStream = SerialPort.class.getResourceAsStream(resourceURI);
 
 		if (libraryStream == null) {
 			System.err.println("Unable to locate native library resource " + resource);
