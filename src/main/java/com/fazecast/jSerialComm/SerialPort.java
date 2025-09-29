@@ -25,17 +25,11 @@
 
 package com.fazecast.jSerialComm;
 
-import java.lang.ProcessBuilder;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -111,6 +105,8 @@ public class SerialPort
 			// Determine the temporary file directories for native library storage
 			String[] architectures;
 			String libraryPath, libraryFileName, extractedFileName;
+
+			final String unpackedBinPath = getUnpackedBinPath();
 			final String manualLibraryPath = System.getProperty("jSerialComm.library.path", "");
 			final String OS = System.getProperty("os.name", "").toLowerCase();
 			final String arch = System.getProperty("os.arch", "").toLowerCase();
@@ -200,12 +196,25 @@ public class SerialPort
 			catch (UnsatisfiedLinkError e) { errorMessages.add(e.getMessage()); }
 			catch (Exception e) { errorMessages.add(e.getMessage()); }
 
-			// Attempt to load from an existing extracted location
-			for (int attempt = 0; !libraryLoaded && (attempt < 2); ++attempt)
-			{
-				File nativeLibrary = new File((attempt == 0) ? tempFileDirectory : userHomeDirectory, libraryFileName);
-				libraryLoaded = nativeLibrary.exists() && loadNativeLibrary(nativeLibrary.getCanonicalPath(), errorMessages);
-			}
+            // Attempt to load from the unpacked native library location
+            if (!libraryLoaded && unpackedBinPath != null) {
+                for (int i = 0; !libraryLoaded && (i < architectures.length); ++i) {
+                    libraryLoaded = loadNativeLibrary(new File(unpackedBinPath, libraryPath + File.separator + architectures[i] + File.separator + libraryFileName).getCanonicalPath(), errorMessages);
+                }
+                if (!libraryLoaded && new File(unpackedBinPath).exists()) {
+                    throw new UnsatisfiedLinkError("Unpacked native bin directory is found, but cannot load the library from it! " + errorMessages);
+                }
+            }
+            else {
+                System.err.println("Unable to locate unpacked binary path. This is fine if you are running from gradle.");
+            }
+
+            // Attempt to load from an existing extracted location
+            for (int attempt = 0; !libraryLoaded && (attempt < 2); ++attempt)
+            {
+                File nativeLibrary = new File((attempt == 0) ? tempFileDirectory : userHomeDirectory, libraryFileName);
+                libraryLoaded = nativeLibrary.exists() && loadNativeLibrary(nativeLibrary.getCanonicalPath(), errorMessages);
+            }
 
 			// Attempt to load from the expected JAR location
 			extractedFileName = randomizeNativeName ? ((new Date()).getTime() + "-" + libraryFileName) : libraryFileName;
@@ -300,6 +309,55 @@ public class SerialPort
 		catch (IOException e) { e.printStackTrace(); }
 	}
 
+	private static String getUnpackedBinPath() {
+		final String jarPathString = getJarPath();
+		if (jarPathString == null) return null;
+
+		try {
+			final Path jarPath = Path.of(jarPathString);
+			final Path libDirectoryPath = jarPath.getParent();
+			final Path pluginDirectoryPath = libDirectoryPath.getParent();
+			final Path unpackedBinPath = pluginDirectoryPath.resolve("bin");
+			if (!Files.isDirectory(unpackedBinPath)) return null;
+			return unpackedBinPath.toAbsolutePath().toString();
+		}
+		catch (InvalidPathException | SecurityException | IOError e) {
+			System.err.println("Unable to locate unpacked binary path. " + e.getMessage());
+			return null;
+		}
+	}
+
+	/**
+	 * Returns the path to the JAR file of the current file (if it resides in one)
+	 */
+	private static String getJarPath() {
+		try {
+			final URL location = SerialPort.class.getResource("SerialPort.class");
+
+			if (location == null) return null;
+
+			final String wholePath = location.getPath();
+
+			// Resource is in format `file:<jar-path>!<resource-path>` We extract only the jar path here.
+
+			final int prefixIndex = wholePath.indexOf(":");
+			if (prefixIndex < 0) return null;
+
+			final int suffixIndex = wholePath.lastIndexOf("!");
+			if (suffixIndex < 0) return null;
+
+			if (prefixIndex > suffixIndex) return null;
+
+			final String jarPath = wholePath.substring(prefixIndex + 1, suffixIndex);
+			if (!jarPath.endsWith(".jar")) return null;
+
+			return jarPath;
+		} catch (SecurityException e) {
+			System.err.println("Unable to get jar path. " + e.getMessage());
+		}
+		return null;
+	}
+
 	// Static symbolic link testing function
 	static private boolean isSymbolicLink(File file) throws IOException
 	{
@@ -343,6 +401,7 @@ public class SerialPort
 		try
 		{
 			System.load(absoluteLibraryPath);
+			// TODO: md5 check with JAR content (and throw if missing)
 			if (!getNativeLibraryVersion().equals(versionString))
 			{
 				errorMessages.add("Native library at " + absoluteLibraryPath + " has the incorrect version: " + getNativeLibraryVersion() + ", Expected " + versionString);
@@ -1228,7 +1287,7 @@ public class SerialPort
 	 * <p>
 	 * Also note that "flushing" in this context means "clearing". Any untransmitted data will be erased from
 	 * the device driver's transmit buffer and will not be sent or received.
-	 * 
+	 *
 	 * @return Whether the IO buffers were (or will be) successfully flushed.
 	 */
 	public final boolean flushIOBuffers()
