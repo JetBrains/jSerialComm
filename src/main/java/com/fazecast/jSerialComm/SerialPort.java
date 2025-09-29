@@ -32,12 +32,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Vector;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * This class provides native access to serial ports and devices without requiring external libraries or tools.
@@ -409,8 +409,8 @@ public class SerialPort
 	{
 		try
 		{
+			if (!digestMatches(absoluteLibraryPath)) return false;
 			System.load(absoluteLibraryPath);
-			// TODO: md5 check with JAR content (and throw if missing)
 			if (!getNativeLibraryVersion().equals(versionString))
 			{
 				errorMessages.add("Native library at " + absoluteLibraryPath + " has the incorrect version: " + getNativeLibraryVersion() + ", Expected " + versionString);
@@ -423,6 +423,49 @@ public class SerialPort
 		catch (UnsatisfiedLinkError e) { errorMessages.add(e.getMessage()); return false; }
 		catch (Exception e) { errorMessages.add(e.getMessage()); return false; }
 	}
+
+	private static boolean digestMatches(String absoluteLibraryPath) throws NoSuchAlgorithmException, FileNotFoundException {
+		Path path = Path.of(absoluteLibraryPath);
+
+		// OS/arch/file
+		final String resource = StreamSupport.stream(path.spliterator(), false)
+				.skip(path.getNameCount() - 3)
+				.map(Path::toString)
+				.collect(Collectors.joining("/"));
+
+		final InputStream libraryStream = SerialPort.class.getResourceAsStream("/" + resource);
+
+		if (libraryStream == null) {
+			System.err.println("Unable to locate native library resource " + resource);
+			return false;
+		}
+
+		final byte[] expectedMd5 = md5(libraryStream);
+		if (expectedMd5 == null) return false;
+		final byte[] actualMd5 = md5(new FileInputStream(absoluteLibraryPath));
+
+		if (!Arrays.equals(expectedMd5, actualMd5)){
+			System.err.println("MD5 checksums do not match for " + absoluteLibraryPath);
+			return false;
+		}
+
+		return true;
+	}
+
+	private static byte[] md5(InputStream in) throws NoSuchAlgorithmException {
+        try (in) {
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            byte[] buffer = new byte[8192];
+            int bufferSize;
+            while ((bufferSize = in.read(buffer)) >= 0) {
+                md5.update(buffer, 0, bufferSize);
+            }
+            return md5.digest();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+        return null;
+    }
 
 	/**
 	 * Returns the same output as calling {@link #getPortDescription()}.  This may be useful for display containers which call a Java Object's default toString() method.
