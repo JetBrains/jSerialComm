@@ -174,10 +174,7 @@ public class SerialPort
 			}
 			else
 			{
-				System.err.println("This operating system is not supported by the jSerialComm library.");
-				libraryPath = libraryFileName = null;
-				architectures = null;
-				System.exit(-1);
+				throw new UnsatisfiedLinkError("This operating system is not supported by the jSerialComm library.");
 			}
 
 			// Load platform-specific binaries for non-Android systems
