@@ -15,7 +15,7 @@ dependencies {
   compileOnly fileTree(dir: 'src/external', include: ['android*.jar'])
 }
 
-group = 'com.fazecast'
+group = 'org.jetbrains.intellij.deps'
 archivesBaseName = 'jSerialComm'
 version = System.getenv("LIB_VERSION") ?: '2.11.2'
 ext.moduleName = 'com.fazecast.jSerialComm'
@@ -129,13 +129,13 @@ publishing {
       
       pom {
         name = 'jSerialComm'
-        description = 'A platform-independent serial communications library for Java.'
+        description = 'A platform-independent serial communications library for Java. Modified for distribution by JetBrains.'
         url = 'http://fazecast.github.io/jSerialComm/'
         
         scm {
-          connection = 'scm:git:https://github.com/Fazecast/jSerialComm.git'
-          developerConnection = 'scm:git:https://github.com/Fazecast/jSerialComm.git'
-          url = 'https://github.com/Fazecast/jSerialComm'
+          connection = 'scm:git:https://github.com/JetBrains/jSerialComm.git'
+          developerConnection = 'scm:git:https://github.com/JetBrains/jSerialComm.git'
+          url = 'https://github.com/JetBrains/jSerialComm'
         }
         
         licenses {
@@ -159,10 +159,13 @@ publishing {
       }
     }
   }
-  
   repositories {
     maven {
-      url = layout.buildDirectory.dir('staging-deploy')
+      url = uri(property("publicationRepositoryUrl").toString())
+      credentials {
+        username = property("publicationUsername").toString()
+        password = property("publicationPassword").toString()
+      }
     }
   }
 }
