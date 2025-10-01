@@ -407,7 +407,10 @@ public class SerialPort
 		try
 		{
 			if (resourceURI != null) {
-				if (!digestMatches(absoluteLibraryPath, resourceURI)) return false;
+				if (!digestMatches(absoluteLibraryPath, resourceURI)) {
+					System.err.println("The native library at " + absoluteLibraryPath + " does not match the expected checksum.");
+					return false;
+				}
 			}
 			System.load(absoluteLibraryPath);
 			if (!getNativeLibraryVersion().equals(versionString))
