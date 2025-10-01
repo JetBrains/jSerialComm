@@ -28,6 +28,7 @@ package com.fazecast.jSerialComm;
 import com.fazecast.jSerialComm.android.AndroidPort;
 
 import java.io.*;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -343,25 +344,15 @@ public class SerialPort
 	private static String getJarPath() {
 		try {
 			final URL location = SerialPort.class.getResource("SerialPort.class");
-
 			if (location == null) return null;
-
+			final String protocol = location.getProtocol();
+			if (!protocol.equals("jar")) return null;
 			final String wholePath = location.getPath();
-
-			// Resource is in format `file:<jar-path>!<resource-path>` We extract only the jar path here.
-
-			final int prefixIndex = wholePath.indexOf(":");
-			if (prefixIndex < 0) return null;
-
 			final int suffixIndex = wholePath.lastIndexOf("!");
 			if (suffixIndex < 0) return null;
-
-			if (prefixIndex > suffixIndex) return null;
-
-			final String jarPath = wholePath.substring(prefixIndex + 1, suffixIndex);
-			if (!jarPath.endsWith(".jar")) return null;
-
-			return jarPath;
+			final String jarUri = wholePath.substring(0, suffixIndex);
+			if (!jarUri.endsWith(".jar")) return null;
+			return new File(URI.create(jarUri)).getAbsolutePath();
 		} catch (SecurityException e) {
 			System.err.println("Unable to get jar path. " + e.getMessage());
 		}
