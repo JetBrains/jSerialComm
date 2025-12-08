@@ -10,7 +10,6 @@ COMPILE_SOLARIS_SPARC       := sparc-sun-solaris2.10-gcc
 COMPILE_OSX_X86             := o32-clang
 COMPILE_OSX_X86_64          := o64-clang
 COMPILE_OSX_ARM64           := oa64-clang
-COMPILE_ANDROID             := ndk-build
 COMPILE_FREEBSD_X86         := clang -target i386-unknown-freebsd11.2 --sysroot=$(shell echo "`dirname $$(dirname $$(dirname $$(which aarch64-unknown-linux-gnu-gcc)))`")/i386-unknown-freebsd11.2
 COMPILE_FREEBSD_X86_64      := clang -target x86_64-unknown-freebsd11.2 --sysroot=$(shell echo "`dirname $$(dirname $$(dirname $$(which aarch64-unknown-linux-gnu-gcc)))`")/x86_64-unknown-freebsd11.2
 COMPILE_FREEBSD_ARM64       := clang -target arm64-unknown-freebsd11.2 --sysroot=$(shell echo "`dirname $$(dirname $$(dirname $$(which aarch64-unknown-linux-gnu-gcc)))`")/arm64-unknown-freebsd11.2
@@ -24,7 +23,6 @@ LDFLAGS_OPENBSD             := -fuse-ld=lld -O3 -flto -shared -s -fuse-linker-pl
 LDFLAGS_APPLE               := -Os -dynamiclib -flto -shared -fuse-linker-plugin
 JDK_HOME                    := $(shell if [ "`uname`" = "Darwin" ]; then echo "`/usr/libexec/java_home`"; else echo "`dirname $$(dirname $$(readlink -f $$(which javac)))`"; fi)
 INCLUDES                    := -I"$(JDK_HOME)/include" -I"$(JDK_HOME)/include/linux" -I"$(JDK_HOME)/include/darwin" -I"$(JDK_HOME)/include/solaris"
-ANDROID_JAR                 := ../../../external/android.jar
 LIBRARIES_POSIX             := 
 LIBRARIES_APPLE             := -framework Cocoa -framework IOKit
 DELETE                      := @rm
@@ -93,7 +91,7 @@ FLAGSosx64                  := -arch x86_64 -m64
 FLAGSosxaarch64             := -arch arm64
 
 # Define phony and suffix rules
-.PHONY: all clean linux linux32 linux64 arm armv5 armv6hf armv7hf armv8_32 armv8_64 powerpc ppc64le solaris solaris32 solaris64 solarisSparc32 solarisSparc64 osx osx32 osx64 osxaarch64 android freebsd freebsd32 freebsd64 freebsdArm64 openbsd openbsd32 openbsd64
+.PHONY: all clean linux linux32 linux64 arm armv5 armv6hf armv7hf armv8_32 armv8_64 powerpc ppc64le solaris solaris32 solaris64 solarisSparc32 solarisSparc64 osx osx32 osx64 osxaarch64 freebsd freebsd32 freebsd64 freebsdArm64 openbsd openbsd32 openbsd64
 .SUFFIXES:
 .SUFFIXES: .cpp .c .o .class .java .h
 
@@ -234,10 +232,6 @@ osxaarch64 : $(JAVA_CLASS_DIR) $(BUILD_DIR)/osx_aarch64 $(BUILD_DIR)/osx_aarch64
 	$(MKDIR) -p $(RESOURCE_DIR_OSX)/aarch64/
 	$(COPY) $(BUILD_DIR)/osx_aarch64/*.* $(RESOURCE_DIR_OSX)/aarch64/
 
-# Build Android libraries
-android :
-	$(COMPILE_ANDROID)
-
 # Rule to create build directories
 $(BUILD_DIR)/linux_x86 :
 	$(MKDIR) -p $@
@@ -372,4 +366,4 @@ $(JNI_HEADER) : $(JAVA_CLASS)
 
 # Suffix rule to get from *.java -> *.class
 $(JAVA_CLASS) :
-	$(JAVAC) $(JFLAGS) -d $(JAVA_CLASS_DIR)/../../.. -cp $(JAVA_SOURCE_DIR)/../../..:$(ANDROID_JAR) $(JAVA_SOURCE_DIR)/$(basename $(notdir $@)).java -h ..
+	$(JAVAC) $(JFLAGS) -d $(JAVA_CLASS_DIR)/../../.. -cp $(JAVA_SOURCE_DIR)/../../.. $(JAVA_SOURCE_DIR)/$(basename $(notdir $@)).java -h ..
