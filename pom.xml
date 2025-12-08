@@ -4,13 +4,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <name>jSerialComm</name>
-  <groupId>com.fazecast</groupId>
+  <groupId>org.jetbrains.intellij.deps</groupId>
   <artifactId>jSerialComm</artifactId>
   <version>2.11.4</version>
-  <description>A platform-independent serial communications library for Java.</description>
-  <url>http://fazecast.github.io/jSerialComm/</url>
+  <description>A platform-independent serial communications library for Java. Modified for distribution by JetBrains.</description>
+  <url>https://fazecast.github.io/jSerialComm/</url>
   <organization>
-    <name>Fazecast, Inc.</name>
+    <name>JetBrains s.r.o.</name>
   </organization>
 
   <licenses>
@@ -33,9 +33,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:https://github.com/Fazecast/jSerialComm.git</connection>
-    <developerConnection>scm:git:https://github.com/Fazecast/jSerialComm.git</developerConnection>
-    <url>https://github.com/Fazecast/jSerialComm</url>
+    <connection>scm:git:https://github.com/JetBrains/jSerialComm.git</connection>
+    <developerConnection>scm:git:https://github.com/JetBrains/jSerialComm.git</developerConnection>
+    <url>https://github.com/JetBrains/jSerialComm</url>
   </scm>
 
   <repositories>
